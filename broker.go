@@ -19,6 +19,7 @@ package stomp
 import (
 	"errors"
 	"github.com/gmallard/stompngo"
+	"github.com/satori/go.uuid"
 	"net"
 	"os"
 	"syscall"
@@ -30,6 +31,7 @@ type (
 		Address         string
 		Login, Passcode string
 		ConnectionLost  ConnectionLostCallback
+		ClientId        string
 	}
 
 	// Broker wraps the underlying network and stomp connection, so reconnects can be done
@@ -64,6 +66,7 @@ func (c *Broker) Reconnect() error {
 	headers := stompngo.Headers{
 		"accept-version", "1.1", // https://github.com/gmallard/stompngo/issues/13
 		"host", c.host,
+		"client-id", c.params.ClientId,
 	}
 	if c.params.Login != "" {
 		headers = headers.Add("login", c.params.Login)
@@ -83,6 +86,9 @@ func (c *Broker) Reconnect() error {
 
 // dial connects to a Stomp broker. Internal user.
 func dial(params ConnectionParameters) (c *Broker, err error) {
+	if params.ClientId == "" {
+		params.ClientId = uuid.NewV4().String()
+	}
 	aux := &Broker{
 		params: params,
 	}
