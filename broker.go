@@ -86,9 +86,7 @@ func (c *Broker) Reconnect() error {
 
 // dial connects to a Stomp broker. Internal user.
 func dial(params ConnectionParameters) (c *Broker, err error) {
-	if params.ClientId == "" {
-		params.ClientId = uuid.NewV4().String()
-	}
+	params.ClientId += "-" + uuid.NewV4().String()
 	aux := &Broker{
 		params: params,
 	}
