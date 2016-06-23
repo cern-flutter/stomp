@@ -30,7 +30,7 @@ type (
 
 	// SendParams holds additional submission parameters that apply to the message
 	SendParams struct {
-		Persist     bool
+		Persistent  bool
 		ContentType string
 	}
 )
@@ -64,7 +64,7 @@ func (p *Producer) Send(destination, message string, params SendParams) (err err
 		"destination", destination,
 		"content-type", params.ContentType,
 		"content-length", contentLength,
-		"persistent", fmt.Sprint(params.Persist),
+		"persistent", fmt.Sprint(params.Persistent),
 	}
 	for {
 		if err = p.broker.handleReconnectOnSend(p.broker.stompConnection.Send(headers, message)); err != syscall.EAGAIN {

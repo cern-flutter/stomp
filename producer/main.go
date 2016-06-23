@@ -61,7 +61,7 @@ func main() {
 		log.Panic(err)
 	}
 
-	if err = producer.Send(flag.Arg(0), text, stomp.SendParams{Persist: true}); err != nil {
+	if err = producer.Send(flag.Arg(0), text, stomp.SendParams{Persistent: true}); err != nil {
 		log.Panic(reflect.TypeOf(err))
 	}
 	log.Print("Sent")
