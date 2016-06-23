@@ -27,6 +27,11 @@ type (
 	Producer struct {
 		broker *Broker
 	}
+
+	SendParams struct {
+		Persist     bool
+		ContentType string
+	}
 )
 
 // NewProducer instantiates a new producer and initiates the remote connection
@@ -45,19 +50,20 @@ func (p *Producer) Close() error {
 }
 
 // Send a message to the broker
-func (p *Producer) Send(destination, contentType, message string) (err error) {
+func (p *Producer) Send(destination, message string, params SendParams) (err error) {
 	if destination == "" {
 		return stompngo.EREQDSTSND
 	}
 
-	if contentType == "" {
-		contentType = "text/plain"
+	if params.ContentType == "" {
+		params.ContentType = "text/plain"
 	}
 	contentLength := fmt.Sprint(len(message))
 	headers := stompngo.Headers{
 		"destination", destination,
-		"content-type", contentType,
+		"content-type", params.ContentType,
 		"content-length", contentLength,
+		"persistent", fmt.Sprint(params.Persist),
 	}
 	for {
 		if err = p.broker.handleReconnectOnSend(p.broker.stompConnection.Send(headers, message)); err != syscall.EAGAIN {
