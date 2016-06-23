@@ -36,19 +36,22 @@ func main() {
 		log.Fatal("Missing topic or queue to which subscribe")
 	}
 
-	conn, err := stomp.Dial(*addr, *login, *passcode)
+	producer, err := stomp.NewProducer(stomp.ConnectionParameters{
+		Address:  *addr,
+		Login:    *login,
+		Passcode: *passcode,
+		ConnectionLost: func(c *stomp.Broker) {
+			log.Print("Connection lost, reconnecting in 1 second...")
+			time.Sleep(1 * time.Second)
+			if err := c.Reconnect(); err != nil {
+				log.Print("Failed to reconnect!")
+			}
+		},
+	})
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer conn.Close()
-
-	conn.SetConnectionLostCallback(func(c *stomp.Connection) {
-		log.Print("Connection lost, reconnecting in 1 second...")
-		time.Sleep(1 * time.Second)
-		if err := c.Reconnect(); err != nil {
-			log.Print("Failed to reconnect!")
-		}
-	})
+	defer producer.Close()
 
 	log.Print("Connected")
 	log.Print("Write the message")
@@ -58,7 +61,7 @@ func main() {
 		log.Panic(err)
 	}
 
-	if err = conn.Send(flag.Arg(0), "text/plain", text); err != nil {
+	if err = producer.Send(flag.Arg(0), "text/plain", text); err != nil {
 		log.Panic(reflect.TypeOf(err))
 	}
 	log.Print("Sent")

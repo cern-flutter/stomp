@@ -34,33 +34,42 @@ func main() {
 		log.Fatal("Missing topic or queue to which subscribe")
 	}
 
-	conn, err := stomp.Dial(*addr, *login, *passcode)
+	consumer, err := stomp.NewConsumer(stomp.ConnectionParameters{
+		Address:  *addr,
+		Login:    *login,
+		Passcode: *passcode,
+		ConnectionLost: func(c *stomp.Broker) {
+			log.Print("Connection lost, reconnecting in 1 second...")
+			time.Sleep(1 * time.Second)
+			if err := c.Reconnect(); err != nil {
+				log.Print("Failed to reconnect!")
+			}
+		},
+	})
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer conn.Close()
+	defer consumer.Close()
 
-	conn.SetConnectionLostCallback(func(c *stomp.Connection) {
-		log.Print("Connection lost, reconnecting in 1 second...")
-		time.Sleep(1 * time.Second)
-		if err := c.Reconnect(); err != nil {
-			log.Print("Failed to reconnect!")
-		}
-	})
+	for _, broker := range consumer.Brokers {
+		log.Print("Connected to ", broker.RemoteAddr())
+	}
 
-	channel, err := conn.Subscribe(flag.Arg(0), uuid.NewV4().String(), stomp.AckIndividual)
+	messages, errors, err := consumer.Subscribe(flag.Arg(0), uuid.NewV4().String(), stomp.AckIndividual)
 	if err != nil {
 		log.Panic(err)
 	}
 
 	log.Print("Subcribed to ", flag.Arg(0))
-	for msg := range channel {
-		if msg.Error != nil {
-			log.Panic(msg.Error)
+	for {
+		select {
+		case msg := <-messages:
+			log.Print(msg.Headers)
+			log.Print(string(msg.Body))
+			log.Print("")
+			msg.Ack()
+		case err = <-errors:
+			log.Fatal(err)
 		}
-		log.Print(msg.Message.Headers)
-		log.Print(string(msg.Message.Body))
-		log.Print("")
-		conn.Ack(msg.Message)
 	}
 }
