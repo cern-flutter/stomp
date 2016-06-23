@@ -112,7 +112,7 @@ func subscribeToBroker(broker *Broker, headers *stompngo.Headers, out chan<- Mes
 			// No error, forward
 			out <- Message{
 				Message: frame.Message,
-				broker: broker,
+				broker:  broker,
 			}
 		} else if frame.Error != io.EOF || broker.params.ConnectionLost == nil {
 			// An error we don't know how to deal with, forward and be done
@@ -166,7 +166,7 @@ func (c *Consumer) Subscribe(destination, id string, ack AckMode) (<-chan Messag
 	// For each connection, spawn a goroutine that will shovel from one connection to the
 	// common channel
 	for _, broker := range c.Brokers {
-		go func() {
+		go func(broker *Broker) {
 			if err := subscribeToBroker(broker, headers, out); err != nil {
 				// Ignore errors of duplicated subscriptions
 				// Possibly one of the hosts has more than one IP (i.e. 4 and 6)
@@ -175,7 +175,7 @@ func (c *Consumer) Subscribe(destination, id string, ack AckMode) (<-chan Messag
 				}
 			}
 			done <- true
-		}()
+		}(broker)
 	}
 
 	return out, errs, nil
