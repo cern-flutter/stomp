@@ -32,7 +32,7 @@ type (
 		ConnectionLost  ConnectionLostCallback
 	}
 
-	// Connection wraps the underlying network and stomp connection, so reconnects can be done
+	// Broker wraps the underlying network and stomp connection, so reconnects can be done
 	// transparently
 	Broker struct {
 		params          ConnectionParameters
@@ -50,7 +50,7 @@ func (c *Broker) RemoteAddr() net.Addr {
 	return c.netConnection.RemoteAddr()
 }
 
-// reconnect triggers a new connection
+// Reconnect triggers a new connection
 func (c *Broker) Reconnect() error {
 	if c.netConnection != nil {
 		c.netConnection.Close()

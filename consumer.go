@@ -105,8 +105,8 @@ func subscribeToBroker(broker *Broker, headers *stompngo.Headers, out chan<- Mes
 	// To handle disconnects, we need to shovel from one channel to the other, and
 	// handle re-subscriptions if the connection is gone
 	for {
-		frame, ok := <-in
-		if !ok {
+		if frame, ok := <-in; !ok {
+			// Remote channel closed
 			return nil
 		} else if frame.Error == nil {
 			// No error, forward
@@ -156,7 +156,7 @@ func (c *Consumer) Subscribe(destination, id string, ack AckMode) (<-chan Messag
 		nBrokers := len(c.Brokers)
 		for nDone := 0; nDone < nBrokers; {
 			_ = <-done
-			nDone += 1
+			nDone++
 		}
 		close(out)
 		close(errs)

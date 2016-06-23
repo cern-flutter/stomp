@@ -28,6 +28,7 @@ type (
 		broker *Broker
 	}
 
+	// SendParams holds additional submission parameters that apply to the message
 	SendParams struct {
 		Persist     bool
 		ContentType string
