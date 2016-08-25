@@ -16,7 +16,6 @@
 
 package stomp
 
-import ()
 import (
 	"github.com/gmallard/stompngo"
 	"io"
@@ -56,6 +55,14 @@ func NewConsumer(params ConnectionParameters) (*Consumer, error) {
 	host, port, err := net.SplitHostPort(params.Address)
 	if err != nil {
 		return nil, err
+	}
+
+	if params.EnableTLS {
+		params.caCertPool = loadRootCAs(params.CaPath, params.CaCert)
+		params.clientCerts, err = loadClientCert(params.UserCert, params.UserKey)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// Get ips behind the alias

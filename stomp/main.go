@@ -25,11 +25,17 @@ import (
 )
 
 var (
+	debug            bool
 	reconnectAttemps int
 	params           stomp.ConnectionParameters
 )
 
 var RootCmd = &cobra.Command{
+	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		if debug {
+			log.SetLevel(log.DebugLevel)
+		}
+	},
 	Run: func(cmd *cobra.Command, args []string) {
 		cmd.Usage()
 	},
@@ -44,11 +50,18 @@ func init() {
 		}
 		reconnectAttemps++
 	}
-	params.ClientId = uuid.NewV4().String()
+	params.ClientID = uuid.NewV4().String()
 
+	RootCmd.PersistentFlags().BoolVar(&debug, "debug", false, "Debug output")
 	RootCmd.PersistentFlags().StringVar(&params.Address, "connect", "localhost:61613", "Stomp host:port")
 	RootCmd.PersistentFlags().StringVar(&params.Login, "login", "fts", "Stomp login name")
 	RootCmd.PersistentFlags().StringVar(&params.Passcode, "passcode", "fts", "Stomp passcode")
+	RootCmd.PersistentFlags().BoolVar(&params.EnableTLS, "tls", false, "Enable TLS")
+	RootCmd.PersistentFlags().BoolVar(&params.Insecure, "insecure", false, "Do not validate remote certificate")
+	RootCmd.PersistentFlags().StringVar(&params.CaPath, "capath", "/etc/grid-security/certificates", "CA Path")
+	RootCmd.PersistentFlags().StringVar(&params.CaCert, "cacert", "", "CA Bundle")
+	RootCmd.PersistentFlags().StringVar(&params.UserCert, "cert", "", "User certificate")
+	RootCmd.PersistentFlags().StringVar(&params.UserKey, "key", "", "User private key")
 }
 
 func main() {

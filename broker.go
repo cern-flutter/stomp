@@ -17,6 +17,8 @@
 package stomp
 
 import (
+	"crypto/tls"
+	"crypto/x509"
 	"errors"
 	"github.com/gmallard/stompngo"
 	"github.com/satori/go.uuid"
@@ -28,10 +30,22 @@ import (
 type (
 	// ConnectionParameters store the configuration for the Stomp connection
 	ConnectionParameters struct {
-		Address         string
+		// Address is Host:Port
+		Address string
+		// Authentication
 		Login, Passcode string
-		ConnectionLost  ConnectionLostCallback
-		ClientId        string
+		// For SSL/TLS
+		EnableTLS         bool
+		Insecure          bool
+		CaPath, CaCert    string
+		UserCert, UserKey string
+		// Callback when a connection is lost
+		ConnectionLost ConnectionLostCallback
+		// Client identification
+		ClientID string
+
+		caCertPool  *x509.CertPool
+		clientCerts []tls.Certificate
 	}
 
 	// Broker wraps the underlying network and stomp connection, so reconnects can be done
@@ -59,14 +73,20 @@ func (c *Broker) Reconnect() error {
 	}
 
 	var err error
-	if c.netConnection, err = net.Dial("tcp", c.params.Address); err != nil {
+	if c.params.EnableTLS {
+		err = c.connectTLS()
+	} else {
+		err = c.connect()
+	}
+
+	if err != nil {
 		return err
 	}
 
 	headers := stompngo.Headers{
 		"accept-version", "1.1", // https://github.com/gmallard/stompngo/issues/13
 		"host", c.host,
-		"client-id", c.params.ClientId,
+		"client-id", c.params.ClientID,
 	}
 	if c.params.Login != "" {
 		headers = headers.Add("login", c.params.Login)
@@ -84,9 +104,9 @@ func (c *Broker) Reconnect() error {
 	return nil
 }
 
-// dial connects to a Stomp broker. Internal user.
+// dial connects to a Stomp broker. Internal use.
 func dial(params ConnectionParameters) (c *Broker, err error) {
-	params.ClientId += "-" + uuid.NewV4().String()
+	params.ClientID += "-" + uuid.NewV4().String()
 	aux := &Broker{
 		params: params,
 	}

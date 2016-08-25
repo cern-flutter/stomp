@@ -38,6 +38,15 @@ type (
 // NewProducer instantiates a new producer and initiates the remote connection
 func NewProducer(params ConnectionParameters) (*Producer, error) {
 	var err error
+
+	if params.EnableTLS {
+		params.caCertPool = loadRootCAs(params.CaPath, params.CaCert)
+		params.clientCerts, err = loadClientCert(params.UserCert, params.UserKey)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	p := &Producer{}
 	if p.broker, err = dial(params); err != nil {
 		return nil, err
