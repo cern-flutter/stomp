@@ -32,6 +32,7 @@ type (
 	SendParams struct {
 		Persistent  bool
 		ContentType string
+		Headers map[string]string
 	}
 )
 
@@ -75,6 +76,12 @@ func (p *Producer) Send(destination, message string, params SendParams) (err err
 		"content-length", contentLength,
 		"persistent", fmt.Sprint(params.Persistent),
 	}
+	if params.Headers != nil {
+		for k, v := range params.Headers {
+			headers.Add(k, v)
+		}
+	}
+
 	for {
 		if err = p.broker.handleReconnectOnSend(p.broker.stompConnection.Send(headers, message)); err != syscall.EAGAIN {
 			break
