@@ -78,7 +78,7 @@ func (p *Producer) Send(destination, message string, params SendParams) (err err
 	}
 	if params.Headers != nil {
 		for k, v := range params.Headers {
-			headers.Add(k, v)
+			headers = headers.Add(k, v)
 		}
 	}
 
