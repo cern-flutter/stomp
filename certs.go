@@ -19,7 +19,6 @@ package stomp
 import (
 	"crypto/tls"
 	"crypto/x509"
-	log "github.com/sirupsen/logrus"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -27,23 +26,18 @@ import (
 )
 
 func loadCert(pool *x509.CertPool, path string) {
-	log.Debug("Loading ", path)
 	fd, err := os.Open(path)
 	if err != nil {
-		log.Warn("Could not open: ", err)
 		return
 	}
 	defer fd.Close()
 
 	pem, err := ioutil.ReadAll(fd)
 	if err != nil {
-		log.Warn("Could not read: ", err)
 		return
 	}
 
-	if !pool.AppendCertsFromPEM(pem) {
-		log.Debug("Failed to load certificate")
-	}
+	pool.AppendCertsFromPEM(pem)
 }
 
 // Load Root CA from a directory
@@ -53,10 +47,7 @@ func loadRootCAs(dir, bundle string) (pool *x509.CertPool) {
 		loadCert(pool, bundle)
 	}
 	if dir != "" {
-
-		log.Debug("Loading Root CAs from ", dir)
-
-		err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+		filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 			if info.IsDir() {
 				return nil
 			}
@@ -68,9 +59,6 @@ func loadRootCAs(dir, bundle string) (pool *x509.CertPool) {
 
 			return nil
 		})
-		if err != nil {
-			log.Warn(err)
-		}
 	}
 	return
 }
@@ -82,8 +70,6 @@ func loadClientCert(ucert, ukey string) ([]tls.Certificate, error) {
 		ukey = ucert
 	}
 
-	log.Debug("User certificate ", ucert)
-	log.Debug("User key ", ukey)
 	cert, err := tls.LoadX509KeyPair(ucert, ukey)
 	if err != nil {
 		return nil, err

@@ -18,20 +18,17 @@ package stomp
 
 import (
 	"crypto/tls"
-	log "github.com/sirupsen/logrus"
 	"net"
 )
 
 // Connect to a plain socket
 func (c *Broker) connect() (err error) {
-	log.Debug("Connecting to ", c.params.Address)
 	c.netConnection, err = net.Dial("tcp", c.params.Address)
 	return
 }
 
 // Connect via TLS
 func (c *Broker) connectTLS() error {
-	log.Debug("Connecting to ", c.params.Address)
 	rawConnection, err := net.Dial("tcp", c.params.Address)
 	if err != nil {
 		return err
@@ -44,7 +41,6 @@ func (c *Broker) connectTLS() error {
 		InsecureSkipVerify: c.params.Insecure,
 	}
 
-	log.Debug("Performing handshake")
 	tlsConnection := tls.Client(rawConnection, config)
 	if err = tlsConnection.Handshake(); err != nil {
 		return err
