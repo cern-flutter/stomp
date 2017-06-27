@@ -18,7 +18,7 @@ package stomp
 
 import (
 	"crypto/tls"
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	"net"
 )
 

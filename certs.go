@@ -19,7 +19,7 @@ package stomp
 import (
 	"crypto/tls"
 	"crypto/x509"
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	"io/ioutil"
 	"os"
 	"path/filepath"
